@@ -153,3 +153,93 @@ minimalIcons.onchange = event => {
   catch {}
 };
 minimalIcons.onchange({ target: minimalIcons });
+
+const saveData = (function () {
+  const a = document.createElement("a");
+  document.body.appendChild(a);
+  a.style = "display: none";
+  return function (data, fileName) {
+    const json = JSON.stringify(data),
+          blob = new Blob([json], {type: "application/json"}),
+          url = window.URL.createObjectURL(blob);
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      window.URL.revokeObjectURL(url);
+  };
+  }());
+
+$("#export_run").onclick = (event) => {
+  const data = []
+  $$(".grid > div").forEach(elem => { 
+    data.push({
+      id: elem.id,
+      dataLevel: elem.dataset.level ? elem.dataset.level : "0"
+    })
+  })
+  saveData(data, "exported_run.json");
+};
+
+$("#import_run").onclick = (event) => {
+  $("#file_input").click()
+};
+
+// TODO: Currently only working for left clicks. Will need to update for right click and middle clicks.
+$("#file_input").oninput = (event) => {
+  // TODO: Clean this mess up.
+  const reader = new FileReader()
+  reader.readAsText(event.target.files[0])
+  reader.onload = function(e) {
+    const input_data = JSON.parse(reader.result)
+    $$(".grid > div").forEach(elem => { 
+      const icon = $(".icon", elem)
+      const number = $(".number", elem)
+      const nobody = $(".nobody", elem)
+      icon?.classList.remove("opaque");
+      number?.classList.remove("opaque");
+      nobody?.classList.remove("opaque");
+      elem.dataset.level = 0
+
+      input_data.forEach(data => {
+        if (elem.id === data.id) {
+          const level = data.dataLevel
+          const icon = $(".icon", elem)
+          const number = $(".number", elem)
+          const nobody = $(".nobody", elem)
+          elem.dataset.level = level
+
+          const total = Number(elem.dataset.total ?? 1) + Boolean(nobody);
+
+          if (nobody && Number(level) === total)
+            // Show nobody symbol on last level
+            nobody.classList.add("opaque");
+          
+          const imgNum = Math.min(level, total - Boolean(nobody))
+
+          if (imgNum > 1)
+            number?.setAttribute("src", `img/numbers/${imgNum}.png`);
+
+          switch (Number(level)) {
+            case 0:
+              // Disable
+              icon?.classList.remove("opaque");
+              number?.classList.remove("opaque");
+              nobody?.classList.remove("opaque");
+              break;
+
+            case 1:
+              // First state, don't show number yet
+              icon?.classList.add("opaque");
+              number?.classList.remove("opaque");
+              break;
+
+            default:
+              icon?.classList.add("opaque");
+              number?.classList.add("opaque");
+              break;
+          }
+        }
+      })
+    })
+  }
+}

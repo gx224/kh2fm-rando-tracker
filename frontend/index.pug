@@ -19,6 +19,7 @@ html(lang="en")
       .grid
         each item, file in items
           .item(
+            id=item.id
             class=item.cls
             data-total=item.total
             data-group=item.group

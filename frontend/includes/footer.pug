@@ -24,3 +24,11 @@ footer
 
       +popup("Settings")
         include settings.pug
+      
+      form#export_run
+        button(type="button") Export Run
+      
+      form#import_run
+        input(type="file")#file_input
+        button(type="button", name="Import Run") Import Run
+
